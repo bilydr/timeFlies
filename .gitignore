@@ -21,3 +21,4 @@ vignettes/*.pdf
 
 # downloaded data files
 /downloads
+/data
