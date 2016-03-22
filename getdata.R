@@ -1,6 +1,7 @@
-library(readr)
+# library(readr)
 library(RSQLite)
 library(dplyr)
+library(data.table)
 
 ### get data from BTS website -----------------------------------------------
 # source http://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=236
@@ -14,22 +15,26 @@ months <- 1:1
 
 
 for (yr in years) {
-  for (mo in months) {
-    tgtfile <- paste0("downloads/", yr, "_", mo, ".zip")
-    if (!file.exists(tgtfile)) {
-      srcfile <-
-        paste0("On_Time_On_Time_Performance_", yr, "_", mo, ".zip")
-      msg <- paste("Downloading", srcfile, "...\t")
-      cat(msg)
-      download.file(
-        url = paste0(preurl, srcfile),
-        destfile = tgtfile,
-        quiet = T
-      )
-      cat('Done\n')
-      
+    for (mo in months) {
+        tgtfile <- paste0("downloads/", yr, "_", mo, ".zip")
+        if (!file.exists(tgtfile)) {
+            srcfile <-
+                paste0("On_Time_On_Time_Performance_",
+                       yr,
+                       "_",
+                       mo,
+                       ".zip")
+            msg <- paste("Downloading", srcfile, "...\t")
+            cat(msg)
+            download.file(
+                url = paste0(preurl, srcfile),
+                destfile = tgtfile,
+                quiet = T
+            )
+            cat('Done\n')
+            
+        }
     }
-  }
 }
 
 
@@ -59,67 +64,43 @@ download.file(url = 'http://www.transtats.bts.gov/Download_Lookup.asp?Lookup=L_A
 
 
 # 1987 file was deleted by mistake - and bts site is down as of March 20
-years <- 2001:2016
+years <- 1988:2016
 months <- 1:1
 
-# column types specs
-mycols <- cols_only(
-  Year = 'i',
-  Quarter = 'i',
-  Month = 'i',
-  DayofMonth = 'i',
-  DayOfWeek = 'i',
-  FlightDate = 'D',
-  UniqueCarrier = 'c',
-  AirlineID = 'i',
-  Carrier = 'c',
-  TailNum = 'c',
-  FlightNum = 'c',
-  OriginAirportID = 'i',
-  OriginAirportSeqID = 'i',
-  OriginCityMarketID = 'i',
-  Origin = 'c',
-  OriginCityName = 'c',
-  OriginState = 'c',
-  OriginStateFips = 'c',
-  OriginStateName = 'c',
-  OriginWac = 'i',
-  DestAirportID = 'i',
-  DestAirportSeqID = 'i',
-  DestCityMarketID = 'i',
-  Dest = 'c',
-  DestCityName = 'c',
-  DestState = 'c',
-  DestStateFips = 'c',
-  DestStateName = 'c',
-  DestWac = 'i'
-)
 
 # open db connection
 con <- dbConnect(SQLite(), "data/timeFlies.sqlite")
 
 for (yr in years) {
-  for (mo in months) {
-    zipFile <- paste0("downloads/", yr, "_", mo, ".zip")
-    df <- read_csv(zipFile) %>%
-      select(Year,
-             #Quarter, Month, DayofMonth, DayOfWeek, FlightDate,
-             UniqueCarrier,
-             Carrier,
-             #AirlineID, TailNum, FlightNum,
-             OriginAirportID,
-             Origin,
-             #OriginCityName,
-             DestAirportID,
-             Dest)
-    df <- as.data.frame(df)
-    dbWriteTable(con,
-                 name = "allyears",
-                 value = df,
-                 append = T)
-    # dfConso <- bind_rows(df, dfConso)
-  }
+    for (mo in months) {
+        zipFile <- paste0("downloads/", yr, "_", mo, ".zip")
+        # extract file
+        unzip(zipFile)
+        csvFile <-
+            paste0("On_Time_On_Time_Performance_", yr, "_", mo, ".csv")
+        # import data
+        df <- fread(csvFile, sep = ',', header = T) %>%
+            select(Year,
+                   #Quarter, Month, DayofMonth, DayOfWeek, FlightDate,
+                   UniqueCarrier,
+                   Carrier,
+                   #AirlineID, TailNum, FlightNum,
+                   OriginAirportID,
+                   Origin,
+                   #OriginCityName,
+                   DestAirportID,
+                   Dest)
+        # append data to sqlite db
+        dbWriteTable(con,
+                     name = "allyears",
+                     value = df,
+                     append = T)
+        # clean up
+        rm(df)
+        gc()
+        file.remove(csvFile)
+    }
 }
-rm(df)
-gc()
+# further clean up
 dbDisconnect(con)
+file.remove('readme.html')
