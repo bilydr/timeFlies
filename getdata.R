@@ -38,11 +38,12 @@ for (yr in years) {
 }
 
 
-## download lookup tables from BTS
+## download lookup tables from BTS and save as a Rdata file
 # for field UniqueCarrier
 download.file(url = 'http://www.transtats.bts.gov/Download_Lookup.asp?Lookup=L_UNIQUE_CARRIERS',
               destfile = "downloads/L_UNIQUE_CARRIERS.csv",
               quiet = T)
+
 
 # for field Carrier
 download.file(url = 'http://www.transtats.bts.gov/Download_Lookup.asp?Lookup=L_CARRIER_HISTORY',
@@ -59,6 +60,12 @@ download.file(url = 'http://www.transtats.bts.gov/Download_Lookup.asp?Lookup=L_A
               destfile = "downloads/L_AIRPORT.csv",
               quiet = T)
 
+
+uniCarr <- fread('downloads/L_UNIQUE_CARRIERS.csv')
+carrHist <- fread('downloads/L_CARRIER_HISTORY.csv')
+aptID <- fread('downloads/L_AIRPORT_ID.csv')
+apts <- fread('downloads/L_AIRPORT.csv')
+save(uniCarr, carrHist, aptID, apts, file = "data/lookup.Rdata")
 
 ### Consolidate all years into a Sqlite database ----------------------------------------
 
