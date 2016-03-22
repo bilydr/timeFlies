@@ -52,8 +52,8 @@ load('data/lookup.Rdata')
 # app - UI ----------------------------------------------------------------
 
 ui <- dashboardPage(
-    dashboardHeader(title = "TimeFlies"),
-    dashboardSidebar(
+    dashboardHeader(title = "TimeFlies", titleWidth = 160),
+    dashboardSidebar(width = 160,
         # google analytics
         tags$head(includeScript("google-analytics.js")),
         
@@ -91,14 +91,12 @@ ui <- dashboardPage(
                             sep = ""
                         ),
                         # background = 'white',
-                        width = 3,
+                        width = 12,
                         height = 100
-                    ),
-                    infoBoxOutput("aptBox", width = 3),
-                    infoBoxOutput("alnBox", width = 3),
-                    infoBoxOutput("rouBox", width = 3)
+                    )
                 ),
                 # row of airports
+                fluidRow(infoBoxOutput("aptBox", width = 6)),
                 fluidRow(
                     box(
                         icon = icon("plane", lib = "glyphicon"),
@@ -135,6 +133,7 @@ ui <- dashboardPage(
                     )
                 ),
                 # row of airlines
+                fluidRow(infoBoxOutput("alnBox", width = 6)),
                 fluidRow(
                     box(
                         title = "Airlines: Newcomer",
@@ -142,7 +141,8 @@ ui <- dashboardPage(
                         status = "success",
                         solidHeader = T,
                         width = 3,
-                        height = NULL
+                        height = NULL,
+                        collapsible = T
                     ),
                     box(
                         title = "Airlines: Growth",
@@ -150,7 +150,8 @@ ui <- dashboardPage(
                         status = "info",
                         solidHeader = T,
                         width = 3,
-                        height = NULL
+                        height = NULL,
+                        collapsible = T
                     ),
                     box(
                         title = "Airlines: Decline",
@@ -158,7 +159,8 @@ ui <- dashboardPage(
                         status = "warning",
                         solidHeader = T,
                         width = 3,
-                        height = NULL
+                        height = NULL,
+                        collapsible = T
                     ),
                     box(
                         title = "Airlines: Leaver",
@@ -166,11 +168,13 @@ ui <- dashboardPage(
                         status = "danger",
                         solidHeader = T,
                         width = 3,
-                        height = NULL
+                        height = NULL,
+                        collapsible = T
                     )
                 ),
                 
                 # row of Routes
+                fluidRow(infoBoxOutput("rouBox", width = 6)),
                 fluidRow(
                     box(
                         title = "Routes: New",
@@ -243,7 +247,7 @@ server <- function(input, output, session) {
             "Airports", 
             paste0(nAptCur, " : ", percent(yoy), ' YoY'), 
             icon = icon("plane", lib = "glyphicon"),
-            color = "blue"
+            color = "navy", fill = T
         )
     })
     
@@ -255,7 +259,7 @@ server <- function(input, output, session) {
             "Airlines", 
             paste0(nAlnCur, " : ", percent(yoy), ' YoY'), 
             icon = icon("plane", lib = "font-awesome"),
-            color = "blue"
+            color = "navy", fill = T
         )
     })
     
@@ -294,7 +298,7 @@ server <- function(input, output, session) {
             "Routes", 
             paste0(nRouCur, " : ", percent(yoy), ' YoY'), 
             icon = icon("transfer", lib = "glyphicon"),
-            color = "blue"
+            color = "navy", fill = T
         )
     })
     
