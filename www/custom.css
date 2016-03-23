@@ -1,0 +1,17 @@
+.small-box, .info-box {
+    height: 90px
+}
+.info-box-number, .small-box h3{
+    font-weight: 500;
+    font-size: 38px;
+}
+.main-header .logo {
+    font-family: "Georgia", Times, "Times New Roman", serif;
+    font-weight: bold;
+    font-size: 24px;
+}
+/*
+.main-sidebar, .logo {
+    position: fixed;
+}
+*/

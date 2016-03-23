@@ -3,7 +3,7 @@ library(RSQLite)
 library(dplyr)
 library(data.table)
 
-### get data from BTS website -----------------------------------------------
+### get On-Time Performance data from BTS website -----------------------------------------------
 # source http://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=236
 
 ## download pre-zipped monthly files
@@ -12,7 +12,6 @@ preurl <- "http://tsdata.bts.gov/PREZIP/"
 # 1987 pre-zipped data has been unavailable since March 20, 2016
 years <- 1988:2016
 months <- 1:1
-
 
 for (yr in years) {
     for (mo in months) {
@@ -55,6 +54,7 @@ download.file(url = 'http://www.transtats.bts.gov/Download_Lookup.asp?Lookup=L_A
               destfile = "downloads/L_AIRPORT_ID.csv",
               quiet = T)
 
+
 # for fields Origin/Dest
 download.file(url = 'http://www.transtats.bts.gov/Download_Lookup.asp?Lookup=L_AIRPORT',
               destfile = "downloads/L_AIRPORT.csv",
@@ -64,12 +64,12 @@ download.file(url = 'http://www.transtats.bts.gov/Download_Lookup.asp?Lookup=L_A
 uniCarr <- fread('downloads/L_UNIQUE_CARRIERS.csv')
 carrHist <- fread('downloads/L_CARRIER_HISTORY.csv')
 aptID <- fread('downloads/L_AIRPORT_ID.csv')
+# change airport ID to integer type
+aptID$Code <- as.integer(aptID$Code)
 apts <- fread('downloads/L_AIRPORT.csv')
 save(uniCarr, carrHist, aptID, apts, file = "data/lookup.Rdata")
 
 ### Consolidate all years into a Sqlite database ----------------------------------------
-
-
 # 1987 file was deleted by mistake - and bts site is down as of March 20
 years <- 1988:2016
 months <- 1:1

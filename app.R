@@ -2,34 +2,43 @@ library(shiny)
 library(shinydashboard)
 library(googleVis)
 library(ggplot2)
-library(scales)
+# library(scales)
 library(dplyr)
+library(splitstackshape)
+
+pctFmt <- function(x){
+    sprintf("%+1.1f%%", x * 100)
+}
 
 # connect to sqlite db
 db <- src_sqlite("data/timeFlies.sqlite")
 tblAll <- tbl(db, "allyears")
 
-# read in lookup tables
+# read in lookup tables 
 load('data/lookup.Rdata')
+# read in pre - calculated data
+load('data/years.Rdata')
+
+
 
 # ##### airport  ----------------------------------------------------------------
 #
 # # top 5 airports by avg nb flights per period
-# # https: /  / en.wikipedia.org / wiki / List_of_the_world%27s_busiest_airports_by_aircraft_movements
-# dfToparp <- df %>%   
-#     group_by(yr, mo, OriginAirportID) %>%   
-#     summarise(n = sum(nfl)) %>%   
-#     group_by(OriginAirportID) %>%   
-#     summarise(n = mean(n)) %>%   
-#     arrange(desc(n)) %>%   
+# # https:/  / en.wikipedia.org / wiki / List_of_the_world%27s_busiest_airports_by_aircraft_movements
+# dfToparp <- df %>%      
+#     group_by(yr, mo, OriginAirportID) %>%      
+#     summarise(n = sum(nfl)) %>%      
+#     group_by(OriginAirportID) %>%      
+#     summarise(n = mean(n)) %>%      
+#     arrange(desc(n)) %>%      
 #     top_n(4, wt = n)
 #
-# # evolution of top airports -    # airlines,    # flights
-# dfEvo1 <- df %>%   
-#     filter(mo == "01") %>%   
-#     filter(OriginAirportID %in% dfToparp$OriginAirportID) %>%   
-#     group_by(yr, OriginAirportID) %>%   
-#     summarise(nFl = sum(nfl), nOpr = n_distinct(opr)) %>%   
+# # evolution of top airports -       # airlines,       # flights
+# dfEvo1 <- df %>%      
+#     filter(mo == "01") %>%      
+#     filter(OriginAirportID %in% dfToparp$OriginAirportID) %>%      
+#     group_by(yr, OriginAirportID) %>%      
+#     summarise(nFl = sum(nfl), nOpr = n_distinct(opr)) %>%      
 #     select(
 #         Year = yr,
 #           Airport = OriginAirportID,
@@ -48,15 +57,13 @@ load('data/lookup.Rdata')
 # p1 <- plot(mTopEvo)
 # p1
 
-
 # app - UI ----------------------------------------------------------------
 
 ui <- dashboardPage(
     dashboardHeader(title = "TimeFlies", titleWidth = 160),
-    dashboardSidebar(width = 160,
-        # google analytics
-        tags$head(includeScript("google-analytics.js")),
-        
+    dashboardSidebar(
+        width = 160,
+
         sidebarMenu(
             menuItem("Years", tabName = "years", icon = icon("clock-o")),
             menuItem(
@@ -73,6 +80,12 @@ ui <- dashboardPage(
         )
     ),
     dashboardBody(
+        tags$head(
+            # google analytics
+            includeScript("google-analytics.js"),
+            # apply customized styles
+            tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+        ),
         tabItems(
             # First tab content
             tabItem(
@@ -81,7 +94,7 @@ ui <- dashboardPage(
                     box(
                         # title = "Period",
                         sliderInput(
-                            "newyr",
+                            "yr1",
                             "Year",
                             min = 1989,
                             max = 2016,
@@ -96,47 +109,59 @@ ui <- dashboardPage(
                     )
                 ),
                 # row of airports
-                fluidRow(infoBoxOutput("aptBox", width = 6)),
+                fluidRow(
+                        infoBoxOutput("aptBox1", width = 6),
+                        valueBoxOutput("aptBox2", width = 3),
+                        valueBoxOutput("aptBox3", width = 3)
+                ),
                 fluidRow(
                     box(
                         icon = icon("plane", lib = "glyphicon"),
-                        title = "Airports: Newcomer",
+                        title = "New (top 10)",
                         tableOutput("tblAptNew"),
                         status = "success",
                         solidHeader = T,
                         width = 3,
-                        height = 200
+                        height = NULL,
+                        collapsible = T
                     ),
                     box(
-                        title = "Airports: Growth",
+                        title = "Growth (top 10)",
                         tableOutput("tblAptGro"),
-                        status = "info",
+                        status = "primary",
                         solidHeader = T,
                         width = 3,
-                        height = 200
+                        height = NULL,
+                        collapsible = T
                     ),
                     box(
-                        title = "Airports: Decline",
+                        title = "Downturn (top 10)",
                         tableOutput("tblAptDec"),
                         status = "warning",
                         solidHeader = T,
                         width = 3,
-                        height = 200
+                        height = NULL,
+                        collapsible = T
                     ),
                     box(
-                        title = "Airports: Leaver",
+                        title = "Defunct (top 10)",
                         tableOutput("tblAptLea"),
                         status = "danger",
                         solidHeader = T,
                         width = 3,
-                        height = 200
+                        height = NULL,
+                        collapsible = T
                     )
                 ),
                 # row of airlines
-                fluidRow(infoBoxOutput("alnBox", width = 6)),
+                fluidRow(
+                    infoBoxOutput("alnBox1", width = 6),
+                    valueBoxOutput("alnBox2", width = 3),
+                    valueBoxOutput("alnBox3", width = 3)
+                ),
                 fluidRow(
                     box(
-                        title = "Airlines: Newcomer",
+                        title = "New (top 10)",
                         tableOutput("tblAlnNew"),
                         status = "success",
                         solidHeader = T,
@@ -145,16 +170,16 @@ ui <- dashboardPage(
                         collapsible = T
                     ),
                     box(
-                        title = "Airlines: Growth",
+                        title = "Growth (top 10)",
                         tableOutput("tblAlnGro"),
-                        status = "info",
+                        status = "primary",
                         solidHeader = T,
                         width = 3,
                         height = NULL,
                         collapsible = T
                     ),
                     box(
-                        title = "Airlines: Decline",
+                        title = "Downturn (top 10)",
                         tableOutput("tblAlnDec"),
                         status = "warning",
                         solidHeader = T,
@@ -163,7 +188,7 @@ ui <- dashboardPage(
                         collapsible = T
                     ),
                     box(
-                        title = "Airlines: Leaver",
+                        title = "Defunct (top 10)",
                         tableOutput("tblAlnLea"),
                         status = "danger",
                         solidHeader = T,
@@ -174,39 +199,47 @@ ui <- dashboardPage(
                 ),
                 
                 # row of Routes
-                fluidRow(infoBoxOutput("rouBox", width = 6)),
+                fluidRow(
+                    infoBoxOutput("rouBox1", width = 6),
+                    valueBoxOutput("rouBox2", width = 3),
+                    valueBoxOutput("rouBox3", width = 3)
+                ),
                 fluidRow(
                     box(
-                        title = "Routes: New",
+                        title = "New (top 10)",
                         tableOutput("tblRouNew"),
                         status = "success",
                         solidHeader = T,
                         width = 3,
-                        height = 200
+                        height = NULL,
+                        collapsible = T
                     ),
                     box(
-                        title = "Routes: Growth",
+                        title = "Growth (n>500, top 10)",
                         tableOutput("tblRouGro"),
-                        status = "info",
+                        status = "primary",
                         solidHeader = T,
                         width = 3,
-                        height = 200
+                        height = NULL,
+                        collapsible = T
                     ),
                     box(
-                        title = "Routes: Decline",
+                        title = "Downturn (n>500, top 10)",
                         tableOutput("tblRouDec"),
                         status = "warning",
                         solidHeader = T,
                         width = 3,
-                        height = 200
+                        height = NULL,
+                        collapsible = T
                     ),
                     box(
-                        title = "Routes: Discontinued",
+                        title = "Defunct (top 10)",
                         tableOutput("tblRouLea"),
                         status = "danger",
                         solidHeader = T,
                         width = 3,
-                        height = 200
+                        height = NULL,
+                        collapsible = T
                     )
                 )
             ),
@@ -218,146 +251,234 @@ ui <- dashboardPage(
     )
 )
 
-
-
-
 # app - SERVER ------------------------------------------------------------
 server <- function(input, output, session) {
-    dfPre <- reactive({
-        myYr <- input$newyr - 1
-        out <- tblAll %>%
-            filter(Year == myYr) %>% 
-            collect()
-        return(out)
-    })
-    
-    dfCur <- reactive({
-        myYr <- input$newyr
-        out <- tblAll %>%
-            filter(Year == myYr) %>% 
-            collect()
-        return(out)
-    })
-    
-    output$aptBox <- renderInfoBox({
-        nAptPre <- n_distinct(dfPre()$OriginAirportID)
-        nAptCur <- n_distinct(dfCur()$OriginAirportID)
-        yoy <- nAptCur / nAptPre - 1
+    ### Years Tab
+    ## airport outputs
+    aptStat <- reactive(aptNb[aptNb$Year == input$yr1, ])
+    output$aptBox1 <- renderInfoBox({
         infoBox(
-            "Airports", 
-            paste0(nAptCur, " : ", percent(yoy), ' YoY'), 
+            title = paste("N. Airports in", input$yr1),
+            value = aptStat()$n, 
             icon = icon("plane", lib = "glyphicon"),
-            color = "navy", fill = T
+            color = "navy",
+            fill = T
         )
     })
     
-    output$alnBox <- renderInfoBox({
-        nAlnPre <- n_distinct(dfPre()$UniqueCarrier)
-        nAlnCur <- n_distinct(dfCur()$UniqueCarrier)
-        yoy <- nAlnCur / nAlnPre - 1
+    output$aptBox2 <- renderValueBox({
+        valueBox(
+            value = sprintf("%+d", aptStat()$var),
+            subtitle = 'vs. LY', 
+            color = "navy"
+        )
+    })
+    
+    
+    output$aptBox3 <- renderValueBox({
+        valueBox(
+            value = pctFmt(aptStat()$yoy),
+            subtitle = 'YoY %', 
+            color = "navy"
+        )
+    })
+    
+    output$tblAptNew <- renderTable({
+        aptChn %>% 
+            filter(Year == input$yr1, isNew) %>% 
+            arrange(desc(n)) %>% 
+            slice(1:10) %>%  
+            left_join(aptID, by = c('OriginAirportID' = 'Code')) %>%
+            select(Airport = Description, n)
+        
+    }, include.rownames = FALSE)
+    
+    output$tblAptGro <- renderTable({
+        aptChn %>% 
+            filter(Year == input$yr1,!isNew, var >= 0) %>% 
+            arrange(desc(yoy)) %>% 
+            slice(1:10) %>% 
+            left_join(aptID, by = c('OriginAirportID' = 'Code')) %>% 
+            mutate(YoY = pctFmt(yoy)) %>% 
+            select(Airport = Description, n)
+    }, include.rownames = FALSE)
+    
+    output$tblAptDec <- renderTable({
+        aptChn %>% 
+            filter(Year == input$yr1,!isNew, var < 0) %>% 
+            arrange(yoy) %>% 
+            slice(1:10) %>% 
+            left_join(aptID, by = c('OriginAirportID' = 'Code')) %>% 
+            mutate(YoY = pctFmt(yoy)) %>% 
+            select(Airport = Description, n)
+    }, include.rownames = FALSE)
+    
+    output$tblAptLea <- renderTable({
+        aptChn %>% 
+            filter(Year == input$yr1 - 1, toLea) %>% 
+            arrange(desc(n)) %>% 
+            slice(1:10) %>% 
+            left_join(aptID, by = c('OriginAirportID' = 'Code')) %>% 
+            select(Airport = Description, n_LY = n)
+    }, include.rownames = FALSE)
+    
+    ## airline outputs
+    alnStat <- reactive(alnNb[alnNb$Year == input$yr1, ])
+    output$alnBox1 <- renderInfoBox({
         infoBox(
-            "Airlines", 
-            paste0(nAlnCur, " : ", percent(yoy), ' YoY'), 
+            title = paste("N. Airlines in", input$yr1),
+            value = alnStat()$n, 
             icon = icon("plane", lib = "font-awesome"),
-            color = "navy", fill = T
+            color = "navy",
+            fill = T
         )
     })
     
-    output$rouBox <- renderInfoBox({
-        dfLY1 <- dfPre() %>% 
-            select(OriginAirportID, DestAirportID) %>% 
-            filter(OriginAirportID <= DestAirportID)
-        dfLY2 <- dfPre() %>%
-            select(OriginAirportID, DestAirportID) %>% 
-            filter(OriginAirportID > DestAirportID)
-        dfLY1$routeID <-
-            paste(dfLY1$OriginAirportID, dfLY1$DestAirportID, sep = '-')
-        dfLY2$routeID <-
-            paste(dfLY2$DestAirportID, dfLY2$OriginAirportID, sep = '-')
-        
-        dfLY <- bind_rows(dfLY1, dfLY2)
-        
-        nRouPre <- n_distinct(dfLY$routeID)
-        
-        dfCY1 <- dfCur() %>% 
-            select(OriginAirportID, DestAirportID) %>% 
-            filter(OriginAirportID <= DestAirportID)
-        dfCY2 <- dfCur() %>%
-            select(OriginAirportID, DestAirportID) %>% 
-            filter(OriginAirportID > DestAirportID)
-        dfCY1$routeID <-
-            paste(dfCY1$OriginAirportID, dfCY1$DestAirportID, sep = '-')
-        dfCY2$routeID <-
-            paste(dfCY2$DestAirportID, dfCY2$OriginAirportID, sep = '-')
-        
-        dfCY <- bind_rows(dfCY1, dfCY2)
-        
-        nRouCur <- n_distinct(dfCY$routeID)
-        yoy <- nRouCur / nRouPre - 1
-        infoBox(
-            "Routes", 
-            paste0(nRouCur, " : ", percent(yoy), ' YoY'), 
-            icon = icon("transfer", lib = "glyphicon"),
-            color = "navy", fill = T
+    output$alnBox2 <- renderValueBox({
+        valueBox(
+            value = sprintf("%+d", alnStat()$var),
+            subtitle = 'vs. LY', 
+            color = "navy"
         )
     })
     
-    airlinesPre <- reactive(dfPre() %>%
-                                group_by(UniqueCarrier) %>%
-                                summarize(nflPre = n()))
-    airlinesCur <- reactive(dfCur() %>%
-                                group_by(UniqueCarrier) %>%
-                                summarize(nflCur = n()))
     
-    # new airlines entering the market
-    newAirlines <- reactive({
-        out <- airlinesCur() %>%
-            anti_join(airlinesPre(), 
-                      by = c('UniqueCarrier' = 'UniqueCarrier')) %>%
-            arrange(desc(nflCur)) %>% 
-            left_join(uniCarr, by = c('UniqueCarrier' = 'Code')) %>% 
-            select(Carrier = Description, N_CY = nflCur)
-        return(out)
-    })
-    
-    # airlines active in both years 
-    comAirlines <- reactive({
-        out <- airlinesPre() %>%
-            inner_join(airlinesCur(), 
-                      by = c('UniqueCarrier' = 'UniqueCarrier')) %>%
-            mutate(YoY = nflCur/nflPre -1) %>% 
-            arrange(desc(YoY)) %>% 
-            left_join(uniCarr, by = c('UniqueCarrier' = 'Code')) %>% 
-            select(Carrier = Description, N_CY = nflCur, YoY)
-        return(out)
-    })
-    
-    # discontinued airlines
-    disAirlines <- reactive({
-        out <- airlinesPre() %>%
-            anti_join(airlinesCur(), 
-                      by = c('UniqueCarrier' = 'UniqueCarrier')) %>%
-            arrange(desc(nflPre)) %>% 
-            left_join(uniCarr, by = c('UniqueCarrier' = 'Code')) %>% 
-            select(Carrier = Description, N_LY = nflPre)
-        return(out)
+    output$alnBox3 <- renderValueBox({
+        valueBox(
+            value = pctFmt(alnStat()$yoy),
+            subtitle = 'YoY %', 
+            color = "navy"
+        )
     })
     
     output$tblAlnNew <- renderTable({
-        newAirlines() 
+        alnChn %>% 
+            filter(Year == input$yr1, isNew) %>% 
+            arrange(desc(n)) %>% 
+            slice(1:10) %>% 
+            left_join(uniCarr, by = c('UniqueCarrier' = 'Code')) %>% 
+            select(Carrier = Description, n)
     }, include.rownames = FALSE)
+    
     output$tblAlnGro <- renderTable({
-        comAirlines() %>% 
-            filter(YoY >= 0) 
+        alnChn %>% 
+            filter(Year == input$yr1,!isNew, var >= 0) %>%
+            arrange(desc(yoy)) %>% 
+            slice(1:10) %>% 
+            left_join(uniCarr, by = c('UniqueCarrier' = 'Code')) %>% 
+            mutate(YoY = pctFmt(yoy)) %>% 
+            select(Carrier = Description, n, YoY)
     }, include.rownames = FALSE)
+    
     output$tblAlnDec <- renderTable({
-        comAirlines() %>% 
-            filter(YoY < 0) %>% 
-            arrange(YoY)
+        alnChn %>% 
+            filter(Year == input$yr1,!isNew, var < 0) %>%
+            arrange(yoy) %>% 
+            slice(1:10) %>% 
+            left_join(uniCarr, by = c('UniqueCarrier' = 'Code')) %>% 
+            mutate(YoY = pctFmt(yoy)) %>% 
+            select(Carrier = Description, n, YoY)
     }, include.rownames = FALSE)
     
     output$tblAlnLea <- renderTable({
-        disAirlines()
+        alnChn %>% 
+            filter(Year == input$yr1 - 1, toLea) %>% 
+            arrange(desc(n)) %>% 
+            slice(1:10) %>%
+            left_join(uniCarr, by = c('UniqueCarrier' = 'Code')) %>% 
+            select(Carrier = Description, n_LY = n)
+    }, include.rownames = FALSE)
+    
+    ## route output
+    rouStat <- reactive(rouNb[rouNb$Year == input$yr1, ])
+    
+    output$rouBox1 <- renderInfoBox({
+        infoBox(
+            title = paste("N. Routes in", input$yr1),
+            value = rouStat()$n,, 
+            icon = icon("transfer", lib = "glyphicon"),
+            color = "navy",
+            fill = T
+        )
+    })
+    
+    output$rouBox2 <- renderValueBox({
+        valueBox(
+            value = sprintf("%+d", rouStat()$var),
+            subtitle = 'vs. LY', 
+            color = "navy"
+        )
+    })
+    
+    
+    output$rouBox3 <- renderValueBox({
+        valueBox(
+            value = pctFmt(rouStat()$yoy),
+            subtitle = 'YoY %', 
+            color = "navy"
+        )
+    })
+    
+    output$tblRouNew <- renderTable({
+        rouChn %>% 
+            filter(Year == input$yr1, isNew) %>% 
+            arrange(desc(n)) %>% 
+            slice(1:10) %>% 
+            cSplit_f('routeID', sep = ';') %>%  # resulting a data.table
+            as.data.frame() %>% 
+            left_join(aptID, by = c('routeID_1' = 'Code')) %>% 
+            rename(Origin = Description) %>% 
+            left_join(aptID, by = c('routeID_2' = 'Code')) %>%
+            rename(Dest = Description) %>%
+            mutate(Route = paste(Origin, Dest, sep = ' ~ ')) %>% 
+            select(Route, n)
+    }, include.rownames = FALSE)
+    
+    output$tblRouGro <- renderTable({
+        rouChn %>% 
+            filter(Year == input$yr1,!isNew, var >= 0, n >= 500) %>% 
+            arrange(desc(yoy)) %>%
+            slice(1:10) %>%
+            cSplit_f('routeID', sep = ';') %>%  # resulting a data.table
+            as.data.frame() %>% 
+            left_join(aptID, by = c('routeID_1' = 'Code')) %>% 
+            rename(Origin = Description) %>% 
+            left_join(aptID, by = c('routeID_2' = 'Code')) %>%
+            rename(Dest = Description) %>%
+            mutate(Route = paste(Origin, Dest, sep = ' ~ ')) %>% 
+            mutate(YoY = pctFmt(yoy)) %>%
+            select(Route, n, YoY)
+    }, include.rownames = FALSE)
+    
+    output$tblRouDec <- renderTable({
+        rouChn %>% 
+            filter(Year == input$yr1,!isNew, var < 0, n >= 500) %>% 
+            arrange(yoy) %>%
+            slice(1:10) %>%
+            cSplit_f('routeID', sep = ';') %>%  # resulting a data.table
+            as.data.frame() %>% 
+            left_join(aptID, by = c('routeID_1' = 'Code')) %>% 
+            rename(Origin = Description) %>% 
+            left_join(aptID, by = c('routeID_2' = 'Code')) %>%
+            rename(Dest = Description) %>%
+            mutate(Route = paste(Origin, Dest, sep = ' ~ ')) %>% 
+            mutate(YoY = pctFmt(yoy)) %>%
+            select(Route, n, YoY)
+    }, include.rownames = FALSE)
+    
+    output$tblRouLea <- renderTable({
+        rouChn %>% 
+            filter(Year == input$yr1 - 1, toLea) %>% 
+            arrange(desc(n)) %>% 
+            slice(1:10) %>% 
+            cSplit_f('routeID', sep = ';') %>%  # resulting a data.table
+            as.data.frame() %>% 
+            left_join(aptID, by = c('routeID_1' = 'Code')) %>% 
+            rename(Origin = Description) %>% 
+            left_join(aptID, by = c('routeID_2' = 'Code')) %>%
+            rename(Dest = Description) %>%
+            mutate(Route = paste(Origin, Dest, sep = ' ~ ')) %>% 
+            select(Route, n_LY = n)
     }, include.rownames = FALSE)
 }
 
