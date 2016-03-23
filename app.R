@@ -6,7 +6,7 @@ library(ggplot2)
 library(dplyr)
 library(splitstackshape)
 
-pctFmt <- function(x){
+pctFmt <- function(x) {
     sprintf("%+1.1f%%", x * 100)
 }
 
@@ -24,21 +24,21 @@ load('data/years.Rdata')
 # ##### airport  ----------------------------------------------------------------
 #
 # # top 5 airports by avg nb flights per period
-# # https:/  / en.wikipedia.org / wiki / List_of_the_world%27s_busiest_airports_by_aircraft_movements
-# dfToparp <- df %>%      
-#     group_by(yr, mo, OriginAirportID) %>%      
-#     summarise(n = sum(nfl)) %>%      
-#     group_by(OriginAirportID) %>%      
-#     summarise(n = mean(n)) %>%      
-#     arrange(desc(n)) %>%      
+# # https: /  / en.wikipedia.org / wiki / List_of_the_world%27s_busiest_airports_by_aircraft_movements
+# dfToparp <- df %>%           
+#     group_by(yr, mo, OriginAirportID) %>%           
+#     summarise(n = sum(nfl)) %>%           
+#     group_by(OriginAirportID) %>%           
+#     summarise(n = mean(n)) %>%           
+#     arrange(desc(n)) %>%           
 #     top_n(4, wt = n)
 #
-# # evolution of top airports -       # airlines,       # flights
-# dfEvo1 <- df %>%      
-#     filter(mo == "01") %>%      
-#     filter(OriginAirportID %in% dfToparp$OriginAirportID) %>%      
-#     group_by(yr, OriginAirportID) %>%      
-#     summarise(nFl = sum(nfl), nOpr = n_distinct(opr)) %>%      
+# # evolution of top airports -            # airlines,            # flights
+# dfEvo1 <- df %>%           
+#     filter(mo == "01") %>%           
+#     filter(OriginAirportID %in% dfToparp$OriginAirportID) %>%           
+#     group_by(yr, OriginAirportID) %>%           
+#     summarise(nFl = sum(nfl), nOpr = n_distinct(opr)) %>%           
 #     select(
 #         Year = yr,
 #           Airport = OriginAirportID,
@@ -63,17 +63,25 @@ ui <- dashboardPage(
     dashboardHeader(title = "TimeFlies", titleWidth = 160),
     dashboardSidebar(
         width = 160,
-
+        
         sidebarMenu(
-            menuItem("Years", tabName = "years", icon = icon("clock-o")),
             menuItem(
-                "Airports",
+                "Years in Review", 
+                tabName = "years", 
+                icon = icon("clock-o")
+            ),
+            menuItem(
+                "Airport Analytics",
                 tabName = "airports",
                 icon = icon("plane", lib = "glyphicon")
             ),
-            menuItem("Airlines", tabName = "airlines", icon = icon("plane")),
             menuItem(
-                "Routes",
+                "Carrier Analytics",
+                tabName = "airlines",
+                icon = icon("plane")
+            ),
+            menuItem(
+                "Route Analytics",
                 tabName = "routes", 
                 icon = icon("transfer", lib = "glyphicon")
             )
@@ -87,166 +95,184 @@ ui <- dashboardPage(
             tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
         ),
         tabItems(
-            # First tab content
+            # section 1:Years in Review
             tabItem(
                 tabName = "years",
+                # row of year input
+                fluidRow(box(
+                    status = "info",
+                    sliderInput(
+                        "yr1",
+                        label = "Year",
+                        min = 1989,
+                        max = 2016,
+                        value = 2015,
+                        step = 1,
+                        ticks = T,
+                        sep = ""
+                    ),
+                    width = 12,
+                    height = 100
+                )),
+                # a big container with 3 tabs
                 fluidRow(
-                    box(
-                        # title = "Period",
-                        sliderInput(
-                            "yr1",
-                            "Year",
-                            min = 1989,
-                            max = 2016,
-                            value = 2015,
-                            step = 1,
-                            ticks = T,
-                            sep = ""
-                        ),
-                        # background = 'white',
+                    tabBox(
                         width = 12,
-                        height = 100
-                    )
-                ),
-                # row of airports
-                fluidRow(
-                        infoBoxOutput("aptBox1", width = 6),
-                        valueBoxOutput("aptBox2", width = 3),
-                        valueBoxOutput("aptBox3", width = 3)
-                ),
-                fluidRow(
-                    box(
-                        icon = icon("plane", lib = "glyphicon"),
-                        title = "New (top 10)",
-                        tableOutput("tblAptNew"),
-                        status = "success",
-                        solidHeader = T,
-                        width = 3,
-                        height = NULL,
-                        collapsible = T
-                    ),
-                    box(
-                        title = "Growth (top 10)",
-                        tableOutput("tblAptGro"),
-                        status = "primary",
-                        solidHeader = T,
-                        width = 3,
-                        height = NULL,
-                        collapsible = T
-                    ),
-                    box(
-                        title = "Downturn (top 10)",
-                        tableOutput("tblAptDec"),
-                        status = "warning",
-                        solidHeader = T,
-                        width = 3,
-                        height = NULL,
-                        collapsible = T
-                    ),
-                    box(
-                        title = "Defunct (top 10)",
-                        tableOutput("tblAptLea"),
-                        status = "danger",
-                        solidHeader = T,
-                        width = 3,
-                        height = NULL,
-                        collapsible = T
-                    )
-                ),
-                # row of airlines
-                fluidRow(
-                    infoBoxOutput("alnBox1", width = 6),
-                    valueBoxOutput("alnBox2", width = 3),
-                    valueBoxOutput("alnBox3", width = 3)
-                ),
-                fluidRow(
-                    box(
-                        title = "New (top 10)",
-                        tableOutput("tblAlnNew"),
-                        status = "success",
-                        solidHeader = T,
-                        width = 3,
-                        height = NULL,
-                        collapsible = T
-                    ),
-                    box(
-                        title = "Growth (top 10)",
-                        tableOutput("tblAlnGro"),
-                        status = "primary",
-                        solidHeader = T,
-                        width = 3,
-                        height = NULL,
-                        collapsible = T
-                    ),
-                    box(
-                        title = "Downturn (top 10)",
-                        tableOutput("tblAlnDec"),
-                        status = "warning",
-                        solidHeader = T,
-                        width = 3,
-                        height = NULL,
-                        collapsible = T
-                    ),
-                    box(
-                        title = "Defunct (top 10)",
-                        tableOutput("tblAlnLea"),
-                        status = "danger",
-                        solidHeader = T,
-                        width = 3,
-                        height = NULL,
-                        collapsible = T
-                    )
-                ),
-                
-                # row of Routes
-                fluidRow(
-                    infoBoxOutput("rouBox1", width = 6),
-                    valueBoxOutput("rouBox2", width = 3),
-                    valueBoxOutput("rouBox3", width = 3)
-                ),
-                fluidRow(
-                    box(
-                        title = "New (top 10)",
-                        tableOutput("tblRouNew"),
-                        status = "success",
-                        solidHeader = T,
-                        width = 3,
-                        height = NULL,
-                        collapsible = T
-                    ),
-                    box(
-                        title = "Growth (n>500, top 10)",
-                        tableOutput("tblRouGro"),
-                        status = "primary",
-                        solidHeader = T,
-                        width = 3,
-                        height = NULL,
-                        collapsible = T
-                    ),
-                    box(
-                        title = "Downturn (n>500, top 10)",
-                        tableOutput("tblRouDec"),
-                        status = "warning",
-                        solidHeader = T,
-                        width = 3,
-                        height = NULL,
-                        collapsible = T
-                    ),
-                    box(
-                        title = "Defunct (top 10)",
-                        tableOutput("tblRouLea"),
-                        status = "danger",
-                        solidHeader = T,
-                        width = 3,
-                        height = NULL,
-                        collapsible = T
+                        
+                        # tab of Airports
+                        tabPanel(
+                            "Airports",
+                            icon = icon("plane", lib = "glyphicon"),
+                            fluidRow(
+                                infoBoxOutput("aptBox1", width = 6),
+                                valueBoxOutput("aptBox2", width = 3),
+                                valueBoxOutput("aptBox3", width = 3),            
+                                box(
+                                    icon = icon("plane", lib = "glyphicon"),
+                                    title = "New (top 10)",
+                                    tableOutput("tblAptNew"),
+                                    status = "success",
+                                    solidHeader = T,
+                                    width = 3,
+                                    height = NULL,
+                                    collapsible = T
+                                ),
+                                box(
+                                    title = "Growth (top 10)",
+                                    tableOutput("tblAptGro"),
+                                    status = "primary",
+                                    solidHeader = T,
+                                    width = 3,
+                                    height = NULL,
+                                    collapsible = T
+                                ),
+                                box(
+                                    title = "Downturn (top 10)",
+                                    tableOutput("tblAptDec"),
+                                    status = "warning",
+                                    solidHeader = T,
+                                    width = 3,
+                                    height = NULL,
+                                    collapsible = T
+                                ),
+                                box(
+                                    title = "Defunct (top 10)",
+                                    tableOutput("tblAptLea"),
+                                    status = "danger",
+                                    solidHeader = T,
+                                    width = 3,
+                                    height = NULL,
+                                    collapsible = T
+                                )                
+                            )
+                        ),
+                        # tab of airlines
+                        tabPanel(
+                            "Airlines",
+                            icon = icon("plane", lib = "font-awesome"),
+                            fluidRow(
+                                infoBoxOutput("alnBox1", width = 6),
+                                valueBoxOutput("alnBox2", width = 3),
+                                valueBoxOutput("alnBox3", width = 3),
+                                box(
+                                    title = "New (top 10)",
+                                    tableOutput("tblAlnNew"),
+                                    status = "success",
+                                    solidHeader = T,
+                                    width = 3,
+                                    height = NULL,
+                                    collapsible = T
+                                ),
+                                box(
+                                    title = "Growth (top 10)",
+                                    tableOutput("tblAlnGro"),
+                                    status = "primary",
+                                    solidHeader = T,
+                                    width = 3,
+                                    height = NULL,
+                                    collapsible = T
+                                ),
+                                box(
+                                    title = "Downturn (top 10)",
+                                    tableOutput("tblAlnDec"),
+                                    status = "warning",
+                                    solidHeader = T,
+                                    width = 3,
+                                    height = NULL,
+                                    collapsible = T
+                                ),
+                                box(
+                                    title = "Defunct (top 10)",
+                                    tableOutput("tblAlnLea"),
+                                    status = "danger",
+                                    solidHeader = T,
+                                    width = 3,
+                                    height = NULL,
+                                    collapsible = T
+                                )
+                            )
+                            
+                        ),
+                        
+                        # tab of Routes
+                        tabPanel(
+                            "Routes",
+                            icon = icon("transfer", lib = "glyphicon"),
+                            fluidRow(
+                                infoBoxOutput("rouBox1", width = 6),
+                                valueBoxOutput("rouBox2", width = 3),
+                                valueBoxOutput("rouBox3", width = 3),
+                                box(
+                                    title = "New (top 10)",
+                                    tableOutput("tblRouNew"),
+                                    status = "success",
+                                    solidHeader = T,
+                                    width = 3,
+                                    height = NULL,
+                                    collapsible = T
+                                ),
+                                box(
+                                    title = "Growth (n>500, top 10)",
+                                    tableOutput("tblRouGro"),
+                                    status = "primary",
+                                    solidHeader = T,
+                                    width = 3,
+                                    height = NULL,
+                                    collapsible = T
+                                ),
+                                box(
+                                    title = "Downturn (n>500, top 10)",
+                                    tableOutput("tblRouDec"),
+                                    status = "warning",
+                                    solidHeader = T,
+                                    width = 3,
+                                    height = NULL,
+                                    collapsible = T
+                                ),
+                                box(
+                                    title = "Defunct (top 10)",
+                                    tableOutput("tblRouLea"),
+                                    status = "danger",
+                                    solidHeader = T,
+                                    width = 3,
+                                    height = NULL,
+                                    collapsible = T
+                                )
+                            )
+                        )
                     )
                 )
             ),
             
-            # Second tab content
+            # section 2:Airport Analytics 
             tabItem(tabName = "airports",
-                    h2("Widgets tab content"))
+                    h2("tab 2")),
+            # section 3:Airline Analytics 
+            tabItem(tabName = "airlines",
+                    h2("tab 3")),
+            # section 4:Route Analytics 
+            tabItem(tabName = "routes",
+                    h2("tab 4"))
         )
     )
 )
@@ -255,7 +281,7 @@ ui <- dashboardPage(
 server <- function(input, output, session) {
     ### Years Tab
     ## airport outputs
-    aptStat <- reactive(aptNb[aptNb$Year == input$yr1, ])
+    aptStat <- reactive(aptNb[aptNb$Year == input$yr1,])
     output$aptBox1 <- renderInfoBox({
         infoBox(
             title = paste("N. Airports in", input$yr1),
@@ -295,7 +321,7 @@ server <- function(input, output, session) {
     
     output$tblAptGro <- renderTable({
         aptChn %>% 
-            filter(Year == input$yr1,!isNew, var >= 0) %>% 
+            filter(Year == input$yr1, !isNew, var >= 0) %>% 
             arrange(desc(yoy)) %>% 
             slice(1:10) %>% 
             left_join(aptID, by = c('OriginAirportID' = 'Code')) %>% 
@@ -305,7 +331,7 @@ server <- function(input, output, session) {
     
     output$tblAptDec <- renderTable({
         aptChn %>% 
-            filter(Year == input$yr1,!isNew, var < 0) %>% 
+            filter(Year == input$yr1, !isNew, var < 0) %>% 
             arrange(yoy) %>% 
             slice(1:10) %>% 
             left_join(aptID, by = c('OriginAirportID' = 'Code')) %>% 
@@ -323,7 +349,7 @@ server <- function(input, output, session) {
     }, include.rownames = FALSE)
     
     ## airline outputs
-    alnStat <- reactive(alnNb[alnNb$Year == input$yr1, ])
+    alnStat <- reactive(alnNb[alnNb$Year == input$yr1,])
     output$alnBox1 <- renderInfoBox({
         infoBox(
             title = paste("N. Airlines in", input$yr1),
@@ -362,7 +388,7 @@ server <- function(input, output, session) {
     
     output$tblAlnGro <- renderTable({
         alnChn %>% 
-            filter(Year == input$yr1,!isNew, var >= 0) %>%
+            filter(Year == input$yr1, !isNew, var >= 0) %>%
             arrange(desc(yoy)) %>% 
             slice(1:10) %>% 
             left_join(uniCarr, by = c('UniqueCarrier' = 'Code')) %>% 
@@ -372,7 +398,7 @@ server <- function(input, output, session) {
     
     output$tblAlnDec <- renderTable({
         alnChn %>% 
-            filter(Year == input$yr1,!isNew, var < 0) %>%
+            filter(Year == input$yr1, !isNew, var < 0) %>%
             arrange(yoy) %>% 
             slice(1:10) %>% 
             left_join(uniCarr, by = c('UniqueCarrier' = 'Code')) %>% 
@@ -390,12 +416,13 @@ server <- function(input, output, session) {
     }, include.rownames = FALSE)
     
     ## route output
-    rouStat <- reactive(rouNb[rouNb$Year == input$yr1, ])
+    rouStat <- reactive(rouNb[rouNb$Year == input$yr1,])
     
     output$rouBox1 <- renderInfoBox({
         infoBox(
             title = paste("N. Routes in", input$yr1),
-            value = rouStat()$n,, 
+            value = rouStat()$n,
+            , 
             icon = icon("transfer", lib = "glyphicon"),
             color = "navy",
             fill = T
@@ -424,7 +451,7 @@ server <- function(input, output, session) {
             filter(Year == input$yr1, isNew) %>% 
             arrange(desc(n)) %>% 
             slice(1:10) %>% 
-            cSplit_f('routeID', sep = ';') %>%  # resulting a data.table
+            cSplit_f('routeID', sep = ';') %>%       # resulting a data.table
             as.data.frame() %>% 
             left_join(aptID, by = c('routeID_1' = 'Code')) %>% 
             rename(Origin = Description) %>% 
@@ -436,10 +463,10 @@ server <- function(input, output, session) {
     
     output$tblRouGro <- renderTable({
         rouChn %>% 
-            filter(Year == input$yr1,!isNew, var >= 0, n >= 500) %>% 
+            filter(Year == input$yr1, !isNew, var >= 0, n >= 500) %>% 
             arrange(desc(yoy)) %>%
             slice(1:10) %>%
-            cSplit_f('routeID', sep = ';') %>%  # resulting a data.table
+            cSplit_f('routeID', sep = ';') %>%       # resulting a data.table
             as.data.frame() %>% 
             left_join(aptID, by = c('routeID_1' = 'Code')) %>% 
             rename(Origin = Description) %>% 
@@ -452,10 +479,10 @@ server <- function(input, output, session) {
     
     output$tblRouDec <- renderTable({
         rouChn %>% 
-            filter(Year == input$yr1,!isNew, var < 0, n >= 500) %>% 
+            filter(Year == input$yr1, !isNew, var < 0, n >= 500) %>% 
             arrange(yoy) %>%
             slice(1:10) %>%
-            cSplit_f('routeID', sep = ';') %>%  # resulting a data.table
+            cSplit_f('routeID', sep = ';') %>%       # resulting a data.table
             as.data.frame() %>% 
             left_join(aptID, by = c('routeID_1' = 'Code')) %>% 
             rename(Origin = Description) %>% 
@@ -471,7 +498,7 @@ server <- function(input, output, session) {
             filter(Year == input$yr1 - 1, toLea) %>% 
             arrange(desc(n)) %>% 
             slice(1:10) %>% 
-            cSplit_f('routeID', sep = ';') %>%  # resulting a data.table
+            cSplit_f('routeID', sep = ';') %>%       # resulting a data.table
             as.data.frame() %>% 
             left_join(aptID, by = c('routeID_1' = 'Code')) %>% 
             rename(Origin = Description) %>% 

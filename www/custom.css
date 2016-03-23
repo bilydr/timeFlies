@@ -10,7 +10,13 @@
     font-weight: bold;
     font-size: 24px;
 }
+
 /*
+.nav-tabs-custom .tab-content{
+    background: #c1c1c1;
+}
+
+
 .main-sidebar, .logo {
     position: fixed;
 }
