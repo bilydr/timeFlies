@@ -55,7 +55,7 @@ loaded via a namespace (and not attached):
 2. Create two subfolders 'data' and 'downloads'
 3. Run `getdata.R`
 4. Run `precalculation.R`
-5. Run `app.R` locally or deploy the entire application folder to a [Shiny Server](https://www.rstudio.com/products/shiny/shiny-server/)
+5. The app is ready to be run in R or to be deployed to a [Shiny Server](https://www.rstudio.com/products/shiny/shiny-server/)
 
 
 ## License
