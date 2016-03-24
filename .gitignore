@@ -22,3 +22,6 @@ vignettes/*.pdf
 # downloaded data files
 /downloads
 /data
+
+# google analytics
+google-analytics.js

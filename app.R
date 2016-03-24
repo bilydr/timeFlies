@@ -16,7 +16,7 @@ tblAll <- tbl(db, "allyears")
 
 # read in lookup tables 
 load('data/lookup.Rdata')
-# read in pre - calculated data
+# read in pre-calculated data
 load('data/years.Rdata')
 
 
@@ -84,7 +84,12 @@ ui <- dashboardPage(
                 "Route Analytics",
                 tabName = "routes", 
                 icon = icon("transfer", lib = "glyphicon")
-            )
+            ),
+            hr(),
+            tags$small(helpText("Data source:", 
+                     a(href="http://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=236", 
+                       "US DoT BTS"), br(),
+                     "Created by:", a(href="https://github.com/bilydr", "Longyi Bi")))
         )
     ),
     dashboardBody(
@@ -266,7 +271,9 @@ ui <- dashboardPage(
             
             # section 2:Airport Analytics 
             tabItem(tabName = "airports",
-                    h2("tab 2")),
+                    h2("Motion Chart: Top 10 Airports per Year"),
+                    htmlOutput("topApt")
+            ),
             # section 3:Airline Analytics 
             tabItem(tabName = "airlines",
                     h2("tab 3")),
@@ -507,6 +514,32 @@ server <- function(input, output, session) {
             mutate(Route = paste(Origin, Dest, sep = ' ~ ')) %>% 
             select(Route, n_LY = n)
     }, include.rownames = FALSE)
+    
+    output$topApt <- renderGvis({
+        # top 10 airports per year
+        dfTopAptYr <- aptChn %>%
+            group_by(Year) %>%
+            top_n(10, n) %>%
+            left_join(aptID, by = c('OriginAirportID' = 'Code')) %>% 
+            select(Year, Airport = Description, nFlights = n)
+        
+        myStateSettings <- '\n{"iconType":"BAR"}\n'
+        gvisMotionChart(
+            dfTopAptYr,
+            idvar = "Airport",
+            timevar = "Year",
+            xvar = "f",
+            yvar = "nFlights",
+            options=list(
+                height="400px",
+                width="600px",
+                state=myStateSettings
+            ), 
+            chartid = 'chart1'
+        )
+        
+    })
+        
 }
 
 shinyApp(ui, server)
