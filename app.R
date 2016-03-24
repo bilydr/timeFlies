@@ -16,46 +16,10 @@ tblAll <- tbl(db, "allyears")
 
 # read in lookup tables 
 load('data/lookup.Rdata')
-# read in pre - calculated data
+# read in pre-calculated data
 load('data/years.Rdata')
-
-
-
-# ##### airport  ----------------------------------------------------------------
-#
-# # top 5 airports by avg nb flights per period
-# # https: /  / en.wikipedia.org / wiki / List_of_the_world%27s_busiest_airports_by_aircraft_movements
-# dfToparp <- df %>%           
-#     group_by(yr, mo, OriginAirportID) %>%           
-#     summarise(n = sum(nfl)) %>%           
-#     group_by(OriginAirportID) %>%           
-#     summarise(n = mean(n)) %>%           
-#     arrange(desc(n)) %>%           
-#     top_n(4, wt = n)
-#
-# # evolution of top airports -            # airlines,            # flights
-# dfEvo1 <- df %>%           
-#     filter(mo == "01") %>%           
-#     filter(OriginAirportID %in% dfToparp$OriginAirportID) %>%           
-#     group_by(yr, OriginAirportID) %>%           
-#     summarise(nFl = sum(nfl), nOpr = n_distinct(opr)) %>%           
-#     select(
-#         Year = yr,
-#           Airport = OriginAirportID,
-#         NbFlights = nFl,
-#           NbAirlines = nOpr
-#     )
-#
-# # draw a motion chart
-# mTopEvo <- gvisMotionChart(
-#     dfEvo1,
-#     idvar = "Airport",
-# timevar = "Year",
-#     xvar = "NbAirlines",
-# yvar = "NbFlights"
-# )
-# p1 <- plot(mTopEvo)
-# p1
+# import ui 
+source('uiYears.R')
 
 # app - UI ----------------------------------------------------------------
 
@@ -84,7 +48,12 @@ ui <- dashboardPage(
                 "Route Analytics",
                 tabName = "routes", 
                 icon = icon("transfer", lib = "glyphicon")
-            )
+            ),
+            hr(),
+            tags$small(helpText("Data source:", 
+                     a(href="http://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=236", 
+                       "US DoT BTS"), br(),
+                     "Created by:", a(href="https://github.com/bilydr", "Longyi Bi")))
         )
     ),
     dashboardBody(
@@ -96,177 +65,12 @@ ui <- dashboardPage(
         ),
         tabItems(
             # section 1:Years in Review
-            tabItem(
-                tabName = "years",
-                # row of year input
-                fluidRow(box(
-                    status = "info",
-                    sliderInput(
-                        "yr1",
-                        label = "Year",
-                        min = 1989,
-                        max = 2016,
-                        value = 2015,
-                        step = 1,
-                        ticks = T,
-                        sep = ""
-                    ),
-                    width = 12,
-                    height = 100
-                )),
-                # a big container with 3 tabs
-                fluidRow(
-                    tabBox(
-                        width = 12,
-                        
-                        # tab of Airports
-                        tabPanel(
-                            "Airports",
-                            icon = icon("plane", lib = "glyphicon"),
-                            fluidRow(
-                                infoBoxOutput("aptBox1", width = 6),
-                                valueBoxOutput("aptBox2", width = 3),
-                                valueBoxOutput("aptBox3", width = 3),            
-                                box(
-                                    icon = icon("plane", lib = "glyphicon"),
-                                    title = "New (top 10)",
-                                    tableOutput("tblAptNew"),
-                                    status = "success",
-                                    solidHeader = T,
-                                    width = 3,
-                                    height = NULL,
-                                    collapsible = T
-                                ),
-                                box(
-                                    title = "Growth (top 10)",
-                                    tableOutput("tblAptGro"),
-                                    status = "primary",
-                                    solidHeader = T,
-                                    width = 3,
-                                    height = NULL,
-                                    collapsible = T
-                                ),
-                                box(
-                                    title = "Downturn (top 10)",
-                                    tableOutput("tblAptDec"),
-                                    status = "warning",
-                                    solidHeader = T,
-                                    width = 3,
-                                    height = NULL,
-                                    collapsible = T
-                                ),
-                                box(
-                                    title = "Defunct (top 10)",
-                                    tableOutput("tblAptLea"),
-                                    status = "danger",
-                                    solidHeader = T,
-                                    width = 3,
-                                    height = NULL,
-                                    collapsible = T
-                                )                
-                            )
-                        ),
-                        # tab of airlines
-                        tabPanel(
-                            "Airlines",
-                            icon = icon("plane", lib = "font-awesome"),
-                            fluidRow(
-                                infoBoxOutput("alnBox1", width = 6),
-                                valueBoxOutput("alnBox2", width = 3),
-                                valueBoxOutput("alnBox3", width = 3),
-                                box(
-                                    title = "New (top 10)",
-                                    tableOutput("tblAlnNew"),
-                                    status = "success",
-                                    solidHeader = T,
-                                    width = 3,
-                                    height = NULL,
-                                    collapsible = T
-                                ),
-                                box(
-                                    title = "Growth (top 10)",
-                                    tableOutput("tblAlnGro"),
-                                    status = "primary",
-                                    solidHeader = T,
-                                    width = 3,
-                                    height = NULL,
-                                    collapsible = T
-                                ),
-                                box(
-                                    title = "Downturn (top 10)",
-                                    tableOutput("tblAlnDec"),
-                                    status = "warning",
-                                    solidHeader = T,
-                                    width = 3,
-                                    height = NULL,
-                                    collapsible = T
-                                ),
-                                box(
-                                    title = "Defunct (top 10)",
-                                    tableOutput("tblAlnLea"),
-                                    status = "danger",
-                                    solidHeader = T,
-                                    width = 3,
-                                    height = NULL,
-                                    collapsible = T
-                                )
-                            )
-                            
-                        ),
-                        
-                        # tab of Routes
-                        tabPanel(
-                            "Routes",
-                            icon = icon("transfer", lib = "glyphicon"),
-                            fluidRow(
-                                infoBoxOutput("rouBox1", width = 6),
-                                valueBoxOutput("rouBox2", width = 3),
-                                valueBoxOutput("rouBox3", width = 3),
-                                box(
-                                    title = "New (top 10)",
-                                    tableOutput("tblRouNew"),
-                                    status = "success",
-                                    solidHeader = T,
-                                    width = 3,
-                                    height = NULL,
-                                    collapsible = T
-                                ),
-                                box(
-                                    title = "Growth (n>500, top 10)",
-                                    tableOutput("tblRouGro"),
-                                    status = "primary",
-                                    solidHeader = T,
-                                    width = 3,
-                                    height = NULL,
-                                    collapsible = T
-                                ),
-                                box(
-                                    title = "Downturn (n>500, top 10)",
-                                    tableOutput("tblRouDec"),
-                                    status = "warning",
-                                    solidHeader = T,
-                                    width = 3,
-                                    height = NULL,
-                                    collapsible = T
-                                ),
-                                box(
-                                    title = "Defunct (top 10)",
-                                    tableOutput("tblRouLea"),
-                                    status = "danger",
-                                    solidHeader = T,
-                                    width = 3,
-                                    height = NULL,
-                                    collapsible = T
-                                )
-                            )
-                        )
-                    )
-                )
-            ),
-            
+            uiYears,
             # section 2:Airport Analytics 
             tabItem(tabName = "airports",
-                    h2("tab 2")),
+                    h2("Motion Chart: Top 10 Airports per Year"),
+                    htmlOutput("topApt")
+            ),
             # section 3:Airline Analytics 
             tabItem(tabName = "airlines",
                     h2("tab 3")),
@@ -507,6 +311,32 @@ server <- function(input, output, session) {
             mutate(Route = paste(Origin, Dest, sep = ' ~ ')) %>% 
             select(Route, n_LY = n)
     }, include.rownames = FALSE)
+    
+    output$topApt <- renderGvis({
+        # top 10 airports per year
+        dfTopAptYr <- aptChn %>%
+            group_by(Year) %>%
+            top_n(10, n) %>%
+            left_join(aptID, by = c('OriginAirportID' = 'Code')) %>% 
+            select(Year, Airport = Description, nFlights = n)
+        
+        myStateSettings <- '\n{"iconType":"BAR"}\n'
+        gvisMotionChart(
+            dfTopAptYr,
+            idvar = "Airport",
+            timevar = "Year",
+            xvar = "f",
+            yvar = "nFlights",
+            options=list(
+                height="400px",
+                width="600px",
+                state=myStateSettings
+            ), 
+            chartid = 'chart1'
+        )
+        
+    })
+        
 }
 
 shinyApp(ui, server)
