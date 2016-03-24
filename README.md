@@ -1,7 +1,7 @@
 # timeFlies
 
 ## Purpose
-A project to use historical flight data or flight schedule data to uncover airline industry evolution and competitive landscape changes at three levels: airport, airline and route. An example to use R to process large datasets, infer business intelligence and build business applications.
+A project to use historical flight data or flight schedule data to uncover airline industry evolution and competitive landscape changes at three levels: airport, carrier and route. An example to use R to process large datasets, infer business intelligence and build business applications.
 
 ## Live App for Demo
 A deployed version of this repo is available at [TimeFlies Shiny App](http://godata.xyz:3838/apps/timeFlies/)
@@ -53,9 +53,8 @@ loaded via a namespace (and not attached):
 ### Setup
 1. Download all files in this repo
 2. Create two subfolders 'data' and 'downloads'
-3. Run `getdata.R`
-4. Run `precalculation.R`
-5. The app is ready to be run in R or to be deployed to a [Shiny Server](https://www.rstudio.com/products/shiny/shiny-server/)
+3. Run `setup.R`
+4. Run `app.R` in local R session, or to deploy to a [Shiny Server](https://www.rstudio.com/products/shiny/shiny-server/)
 
 
 ## License

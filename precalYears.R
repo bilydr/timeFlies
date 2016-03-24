@@ -85,5 +85,6 @@ rouNb <- rouChn %>%
     mutate(var = n - lag(n),
            yoy = var / lag(n))
 
+# save outcomes into Rdata file
 save(aptChn, aptNb, alnChn, alnNb, rouChn, rouNb,
      file = "data/years.Rdata")

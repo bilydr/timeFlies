@@ -69,9 +69,9 @@ uiYears <- tabItem(
                     )                
                 )
             ),
-            # tab of airlines
+            # tab of carriers
             tabPanel(
-                "Airlines",
+                "Carriers",
                 icon = icon("plane", lib = "font-awesome"),
                 fluidRow(
                     infoBoxOutput("alnBox1", width = 6),

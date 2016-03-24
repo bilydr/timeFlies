@@ -4,8 +4,10 @@ library(googleVis)
 library(ggplot2)
 # library(scales)
 library(dplyr)
+library(tidyr)
 library(splitstackshape)
 
+# format percentage
 pctFmt <- function(x) {
     sprintf("%+1.1f%%", x * 100)
 }
@@ -18,11 +20,14 @@ tblAll <- tbl(db, "allyears")
 load('data/lookup.Rdata')
 # read in pre-calculated data
 load('data/years.Rdata')
-# import ui 
+load('data/airport.Rdata')
+# import ui for each sections
 source('uiYears.R')
+source('uiAirport.R')
+source('uiCarrier.R')
+source('uiRoute.R')
 
 # app - UI ----------------------------------------------------------------
-
 ui <- dashboardPage(
     dashboardHeader(title = "TimeFlies", titleWidth = 160),
     dashboardSidebar(
@@ -36,17 +41,17 @@ ui <- dashboardPage(
             ),
             menuItem(
                 "Airport Analytics",
-                tabName = "airports",
+                tabName = "airport",
                 icon = icon("plane", lib = "glyphicon")
             ),
             menuItem(
                 "Carrier Analytics",
-                tabName = "airlines",
+                tabName = "carrier",
                 icon = icon("plane")
             ),
             menuItem(
                 "Route Analytics",
-                tabName = "routes", 
+                tabName = "route", 
                 icon = icon("transfer", lib = "glyphicon")
             ),
             hr(),
@@ -67,16 +72,11 @@ ui <- dashboardPage(
             # section 1:Years in Review
             uiYears,
             # section 2:Airport Analytics 
-            tabItem(tabName = "airports",
-                    h2("Motion Chart: Top 10 Airports per Year"),
-                    htmlOutput("topApt")
-            ),
-            # section 3:Airline Analytics 
-            tabItem(tabName = "airlines",
-                    h2("tab 3")),
+            uiAirport,
+            # section 3:Carrier Analytics 
+            uiCarrier,
             # section 4:Route Analytics 
-            tabItem(tabName = "routes",
-                    h2("tab 4"))
+            uiRoute
         )
     )
 )
@@ -152,11 +152,11 @@ server <- function(input, output, session) {
             select(Airport = Description, n_LY = n)
     }, include.rownames = FALSE)
     
-    ## airline outputs
+    ## carrier outputs
     alnStat <- reactive(alnNb[alnNb$Year == input$yr1,])
     output$alnBox1 <- renderInfoBox({
         infoBox(
-            title = paste("N. Airlines in", input$yr1),
+            title = paste("N. Carriers in", input$yr1),
             value = alnStat()$n, 
             icon = icon("plane", lib = "font-awesome"),
             color = "navy",
@@ -171,7 +171,6 @@ server <- function(input, output, session) {
             color = "navy"
         )
     })
-    
     
     output$alnBox3 <- renderValueBox({
         valueBox(
@@ -312,29 +311,15 @@ server <- function(input, output, session) {
             select(Route, n_LY = n)
     }, include.rownames = FALSE)
     
-    output$topApt <- renderGvis({
-        # top 10 airports per year
-        dfTopAptYr <- aptChn %>%
-            group_by(Year) %>%
-            top_n(10, n) %>%
-            left_join(aptID, by = c('OriginAirportID' = 'Code')) %>% 
-            select(Year, Airport = Description, nFlights = n)
-        
-        myStateSettings <- '\n{"iconType":"BAR"}\n'
-        gvisMotionChart(
-            dfTopAptYr,
-            idvar = "Airport",
-            timevar = "Year",
-            xvar = "f",
-            yvar = "nFlights",
-            options=list(
-                height="400px",
-                width="600px",
-                state=myStateSettings
-            ), 
-            chartid = 'chart1'
-        )
-        
+    # top airports of 2016 in 1988, 2002, 2016 - column chart
+    output$gTopApt16 <- renderGvis({
+        pTopApt16
+    })
+    
+    # top airports motion chart
+    output$gTopAptMC <- renderGvis({
+        pTopAptPerYr
+
     })
         
 }
