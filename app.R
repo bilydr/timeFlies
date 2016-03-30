@@ -2,6 +2,7 @@ library(shiny)
 library(shinydashboard)
 library(googleVis)
 library(ggplot2)
+library(ggthemes)
 library(dplyr)
 library(tidyr)
 library(splitstackshape)
@@ -312,12 +313,12 @@ server <- function(input, output, session) {
     
     ### Airport Analytics 
     # top airports of current year in 1988/1998/2008/current - column chart
-    output$gtopAptCurr <- renderGvis({
+    output$gvTopAptCurr <- renderGvis({
         ptopAptCurr
     })
     
     # top airports motion chart
-    output$gTopAptMC <- renderGvis({
+    output$gvTopAptMC <- renderGvis({
         pTopAptPerYr
 
     })
@@ -350,7 +351,7 @@ server <- function(input, output, session) {
         )
     })
     
-    output$gAptEvo <- renderGvis({
+    output$gvAptEvo <- renderGvis({
         req(input$aptFocus)
         df <- aptFocusStat() %>%
             as.data.frame() 
@@ -363,7 +364,7 @@ server <- function(input, output, session) {
             xvar = "Year",
             yvar = c("nCarriers", "nRoutes", "nFlights"),
             options = list(
-                height = 350,
+                height = 320,
                 title = paste0(
                     'Airport Capacity Evolution\n', 
                     apt, ' (', startYr, ' ~ ', endYr, ')'
@@ -371,11 +372,27 @@ server <- function(input, output, session) {
                 legend = "{alignment:'center', position:'top'}",
                 series = "[{targetAxisIndex:0},{targetAxisIndex:0},
                 {targetAxisIndex:1}]",
-                vAxes = "[{title:'Nb. Carriers/Routes'}, {title:'Nb. Flights'}]"
+                vAxes = "[{title:'Nb. Carriers/ Routes'}, {title:'Nb. Flights'}]"
             )
             
         )
     })
+    
+    # Carriers' share - ggplot2 converted to plotly chart 
+    output$plCarrShare <- renderPlotly({
+        p <- dfCarrShare %>%
+            filter(AirportID == input$aptFocus,
+                   share >= 0.1,
+                   Year > currYr-10 ) %>%
+            ggplot(aes(x = as.factor(Year), y = share, fill = Carrier)) +
+            geom_bar(stat="identity", position="dodge") + 
+            xlab("Year") + ylab("Share by Nb. Flights") +
+            ggtitle("Carriers operating more than 10% of total flights") +
+            theme_gdocs() + 
+            scale_fill_gdocs()
+        ggplotly(p) 
+    })
+        
 }
 
 shinyApp(ui, server)
