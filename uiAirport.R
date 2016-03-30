@@ -8,7 +8,7 @@ uiAirport <- tabItem(
             title = "Top 100 Airports in 2016",
             htmlOutput("gvTopAptCurr"),
             solidHeader = T,
-            status = "info",
+            status = "success",
             width = 6,
             height = 400
         ),
@@ -17,7 +17,7 @@ uiAirport <- tabItem(
             title = "Top 20 Airports each year from 1988 to 2016",
             htmlOutput("gvTopAptMC"),
             solidHeader = T,
-            status = "info",
+            status = "warning",
             width = 6,
             height = 400
         )
@@ -37,7 +37,7 @@ uiAirport <- tabItem(
     ),
     fluidRow(
         box(title = "Map",
-            p('use leaflet to show 5 nearby airports'),
+            p('use gvisMap to show selected and 5 nearby airports'),
             width = 6,
             height = 400
         ),
@@ -49,7 +49,7 @@ uiAirport <- tabItem(
     ),
     fluidRow(
         box(title = "Route Destinations",
-            p('use treemap to show destination shares'),
+            htmlOutput("gvRouDest"),
             width = 6,
             height = 400
         ),

@@ -25,3 +25,6 @@ vignettes/*.pdf
 
 # google analytics
 google-analytics.js
+
+# interim plotting file
+Rplots.pdf

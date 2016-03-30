@@ -351,7 +351,7 @@ server <- function(input, output, session) {
             color = "olive"
         )
     })
-    
+    # airport capacity evolution line chart
     output$gvAptEvo <- renderGvis({
         req(input$aptFocus)
         df <- aptFocusStat() %>%
@@ -359,7 +359,6 @@ server <- function(input, output, session) {
         apt <- names(vTopApt[vTopApt == input$aptFocus])
         startYr <- min(aptFocusStat()$Year)
         endYr <- max(aptFocusStat()$Year)
-        # browser()
         gvisLineChart(
             df,
             xvar = "Year",
@@ -379,18 +378,55 @@ server <- function(input, output, session) {
         )
     })
     
-    # Carriers' share - ggplot2 converted to plotly chart 
+    # route destination treemap
+    output$gvRouDest <- renderGvis({
+        req(input$aptFocus)
+        apt <- names(vTopApt[vTopApt == input$aptFocus])
+        df <- dfRouCurr %>%
+            filter(OriginAirportID == input$aptFocus) %>%
+            left_join(dfAptCurr[,c("AirportID", "Airport", "rank", "nFlights")], 
+                      by = c('DestAirportID' = 'AirportID')) %>%
+            rename(Dest = Airport, nDest = nFlights) %>%
+            mutate(Origin = apt) %>%
+            select(Origin, Dest, n, rank)
+        df0 <-
+            data.frame(
+                Origin = NA,
+                Dest = apt,
+                n = sum(df$n),
+                rank = NA
+            )
+        df <- rbind(df, df0)
+        gvisTreeMap(
+            df,
+            idvar = "Dest",
+            parentvar = "Origin",
+            sizevar = "n",
+            colorvar = "rank",
+            options = list(width = 520,
+                           height = 320,
+                           minColor='#006D2C',
+                           midColor='#66C2A4',
+                           maxColor='#EDF8FB',
+                           headerHeight=20,
+                           fontColor='black',
+                           showScale=TRUE)
+        )
+    })
+    
+    
+    # Carriers' share - ggplot2 to plotly column chart 
     output$plCarrShare <- renderPlotly({
         req(input$aptFocus)
         p <- dfCarrShare %>%
             filter(AirportID == input$aptFocus,
                    share >= 0.05,
-                   Year > currYr - 10 ) %>%
+                   Year >= currYr - 9 ) %>%
             ggplot(aes(x = as.factor(Year), y = share, fill = Carrier)) +
             geom_bar(stat="identity", position="dodge") + 
             xlab("Year") + ylab("Share by Nb. Flights") +
             ggtitle(paste("Carriers operating more than 5% of total flights since", 
-                          currYr - 10)) +
+                          currYr - 9)) +
             theme_gdocs() + 
             scale_fill_gdocs()
         ggplotly(p) 

@@ -24,9 +24,9 @@ aptChn <- tblAll %>%
     ) %>%
     ungroup()
 
-# set isNew to NA for beginning year of the period, same for toLea for ending year 
-aptChn[aptChn$Year == min(aptChn$Year),]$isNew <- NA
-aptChn[aptChn$Year == max(aptChn$Year),]$toLea <- NA
+# set isNew to NA for beginning year of the period, same for toLea for ending year
+aptChn[aptChn$Year == min(aptChn$Year), ]$isNew <- NA
+aptChn[aptChn$Year == max(aptChn$Year), ]$toLea <- NA
 
 # airports count per year
 aptNb <- aptChn %>%
@@ -48,9 +48,9 @@ alnChn <- tblAll %>%
     ) %>%
     ungroup()
 
-# set isNew to NA for beginning year of the period, same for toLea for ending year 
-alnChn[alnChn$Year == min(alnChn$Year),]$isNew <- NA
-alnChn[alnChn$Year == max(alnChn$Year),]$toLea <- NA
+# set isNew to NA for beginning year of the period, same for toLea for ending year
+alnChn[alnChn$Year == min(alnChn$Year), ]$isNew <- NA
+alnChn[alnChn$Year == max(alnChn$Year), ]$toLea <- NA
 
 # airlines count per year
 alnNb <- alnChn %>%
@@ -69,9 +69,9 @@ df <- tblAll %>%
     )
 
 # combine airport pairs into bi-directional routes
-df[df$isReverse,]$routeID <-
-    paste(df[df$isReverse,]$DestAirportID,
-          df[df$isReverse,]$OriginAirportID, sep = ';')
+df[df$isReverse, ]$routeID <-
+    paste(df[df$isReverse, ]$DestAirportID,
+          df[df$isReverse, ]$OriginAirportID, sep = ';')
 
 rouChn <- df %>%
     group_by(routeID, Year) %>%
@@ -84,11 +84,9 @@ rouChn <- df %>%
     ) %>%
     ungroup()
 
-# set isNew to NA for beginning year of the period, same for toLea for ending year 
-rouChn[rouChn$Year == min(rouChn$Year),]$isNew <- NA
-rouChn[rouChn$Year == max(rouChn$Year),]$toLea <- NA
-
-rm(df)
+# set isNew to NA for beginning year of the period, same for toLea for ending year
+rouChn[rouChn$Year == min(rouChn$Year), ]$isNew <- NA
+rouChn[rouChn$Year == max(rouChn$Year), ]$toLea <- NA
 
 # routes count per year
 rouNb <- rouChn %>%
@@ -98,7 +96,20 @@ rouNb <- rouChn %>%
 
 # current year - latest period
 currYr <- max(aptChn$Year)
+# current Year routes
+dfRouCurr <- df %>%
+    ungroup() %>%
+    filter(Year == currYr)
+
+rm(df)
 
 # save outcomes into Rdata file
-save(aptChn, aptNb, alnChn, alnNb, rouChn, rouNb, currYr,
+save(aptChn,
+     aptNb,
+     alnChn,
+     alnNb,
+     rouChn,
+     rouNb,
+     currYr,
+     dfRouCurr,
      file = "data/years.Rdata")
