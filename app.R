@@ -389,7 +389,8 @@ server <- function(input, output, session) {
             ggplot(aes(x = as.factor(Year), y = share, fill = Carrier)) +
             geom_bar(stat="identity", position="dodge") + 
             xlab("Year") + ylab("Share by Nb. Flights") +
-            ggtitle("Carriers operating more than 5% of total flights - last 10 years") +
+            ggtitle(paste("Carriers operating more than 5% of total flights since", 
+                          currYr - 10)) +
             theme_gdocs() + 
             scale_fill_gdocs()
         ggplotly(p) 

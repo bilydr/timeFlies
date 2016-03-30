@@ -8,7 +8,7 @@ load('data/lookup.Rdata')
 load('data/years.Rdata')
 
 # top 100 airports by flights in current/latest year - for column chart
-currYr <- max(aptChn$Year)
+
 topAptCurr <- aptChn %>%
     filter(Year == currYr) %>%
     top_n(100, n) %>% 

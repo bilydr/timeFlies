@@ -11,7 +11,6 @@ fliPerYr <- tblAll %>%
     mutate(var = n - lag(n),
            yoy = var / lag(n))
 
-
 # Airports ----------------------------------------------------------------
 # airports changes per Year
 aptChn <- tblAll %>%
@@ -26,9 +25,8 @@ aptChn <- tblAll %>%
     ungroup()
 
 # set isNew to NA for beginning year of the period, same for toLea for ending year 
-rouChn[rouChn$Year == min(rouChn$Year),]$isNew <- NA
-rouChn[rouChn$Year == max(rouChn$Year),]$toLea <- NA
-
+aptChn[aptChn$Year == min(aptChn$Year),]$isNew <- NA
+aptChn[aptChn$Year == max(aptChn$Year),]$toLea <- NA
 
 # airports count per year
 aptNb <- aptChn %>%
@@ -53,7 +51,6 @@ alnChn <- tblAll %>%
 # set isNew to NA for beginning year of the period, same for toLea for ending year 
 alnChn[alnChn$Year == min(alnChn$Year),]$isNew <- NA
 alnChn[alnChn$Year == max(alnChn$Year),]$toLea <- NA
-
 
 # airlines count per year
 alnNb <- alnChn %>%
@@ -88,8 +85,8 @@ rouChn <- df %>%
     ungroup()
 
 # set isNew to NA for beginning year of the period, same for toLea for ending year 
-aptChn[aptChn$Year == min(aptChn$Year),]$isNew <- NA
-aptChn[aptChn$Year == max(aptChn$Year),]$toLea <- NA
+rouChn[rouChn$Year == min(rouChn$Year),]$isNew <- NA
+rouChn[rouChn$Year == max(rouChn$Year),]$toLea <- NA
 
 rm(df)
 
@@ -99,6 +96,9 @@ rouNb <- rouChn %>%
     mutate(var = n - lag(n),
            yoy = var / lag(n))
 
+# current year - latest period
+currYr <- max(aptChn$Year)
+
 # save outcomes into Rdata file
-save(aptChn, aptNb, alnChn, alnNb, rouChn, rouNb,
+save(aptChn, aptNb, alnChn, alnNb, rouChn, rouNb, currYr,
      file = "data/years.Rdata")
