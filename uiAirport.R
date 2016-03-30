@@ -1,13 +1,12 @@
 # ui elements of section: Airport Analytics
 load('data/airport.Rdata')
 
-
 uiAirport <- tabItem(
     tabName = "airport",
     fluidRow(
         box(
-            title = "Top 10 Airports in 2016",
-            htmlOutput("gtopAptCurr"),
+            title = "Top 100 Airports in 2016",
+            htmlOutput("gvTopAptCurr"),
             solidHeader = T,
             status = "info",
             width = 6,
@@ -16,7 +15,7 @@ uiAirport <- tabItem(
         
         box(
             title = "Top 20 Airports each year from 1988 to 2016",
-            htmlOutput("gTopAptMC"),
+            htmlOutput("gvTopAptMC"),
             solidHeader = T,
             status = "info",
             width = 6,
@@ -24,7 +23,7 @@ uiAirport <- tabItem(
         )
     ),
     fluidRow(
-        box(
+        box(background = "olive",
             status = "success",
             selectizeInput("aptFocus",
                            label = "Airport",
@@ -42,9 +41,8 @@ uiAirport <- tabItem(
             width = 6,
             height = 400
         ),
-        box(title = "Evolution",
-            # p('use gvisLineChart to show #carriers, #routes, #flights along years'),
-            htmlOutput("gAptEvo"),
+        box(title = "Evolution of Capacity",
+            htmlOutput("gvAptEvo"),
             width = 6,
             height = 400
         )
@@ -55,8 +53,8 @@ uiAirport <- tabItem(
             width = 6,
             height = 400
         ),
-        box(title = "Served Airlines",
-            p('use ggplot2 facet to show airlines shares of flights'),
+        box(title = "Carriers' Share",
+            plotlyOutput("plCarrShare"),
             width = 6,
             height = 400
             

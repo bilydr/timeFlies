@@ -35,24 +35,20 @@ dfTopApt <- tblAll %>%
     ungroup()
 
 
-# data for gvis bar chart
-dfBar <- dfTopApt %>%
+# data for gvis table
+df <- dfTopApt %>%
     filter(Year %in% c(1988, 1998, 2008, currYr)) %>%
     select(Year, Airport, nFlights) %>%
     spread(key = Year, value = nFlights) 
 # add prefix to avoid using numbers as column names
-names(dfBar)[-1] <- paste("Yr", names(dfBar)[-1], sep = "_")
+names(df)[-1] <- paste("Yr", names(df)[-1], sep = "_")
 # sort by current period, i.e. last column
-dfBar <- dfBar[order(-dfBar[ncol(dfBar)]),]
+df <- df[order(-df[ncol(df)]),]
     
 
-ptopAptCurr <- gvisTable(dfBar,
-                             # xvar = "Airport",
-                             # yvar = c("1988", "2002", "2016"),
-                             options = list(
-                                 height = "300px",
-                                 width = "540px"
-                             ))
+
+ptopAptCurr <- gvisTable(df,
+                         options = list(height = "320px"))
 # plot(ptopAptCurr)
 
 # top 20 airports per year by flights from 1988 to 2016 - motion chart
@@ -70,13 +66,42 @@ pTopAptPerYr <- gvisMotionChart(
     xvar = "f",
     yvar = "nFlights",
     options = list(
-        height = "300px",
+        height = "320px",
         width = "540px",
         state = myStateSettings
     ),
     chartid = 'apt2'
 )
 
+
+# Carriers' Capacity Share of Top Airports by Nb Flights
+dfCarrShare <- tblAll %>%
+    filter(OriginAirportID %in% topAptCurr$AirportID) %>% 
+    count(OriginAirportID, UniqueCarrier, Year) %>%
+    collect() %>% 
+    group_by(OriginAirportID, Year) %>% 
+    mutate(share = n/sum(n), 
+           rank = min_rank(desc(n))) %>% 
+    left_join(uniCarr, by = c('UniqueCarrier' = 'Code')) %>% 
+    rename(Carrier = Description, AirportID = OriginAirportID) %>% 
+    ungroup()
+
+# library(ggplot2)
+# library(ggthemes)
+# library(plotly)
+# p <- dfCarrShare %>%
+#     filter(AirportID == 10397,
+#            share >= 0.1,
+#            Year > currYr-10 ) %>%
+#     ggplot(aes(x = as.factor(Year), y = share, fill = Carrier)) +
+#     geom_bar(stat="identity", position="dodge") +
+#     # theme(legend.position="top") + 
+#     theme_gdocs() +
+#     scale_fill_gdocs() 
+# 
+# ggplotly(p) 
+# # %>% layout(legend = list(x = 1.05, y = 1.2))
+
 # save outcomes into Rdata file
-save(vTopApt, dfTopApt, ptopAptCurr, pTopAptPerYr,
+save(vTopApt, dfTopApt, ptopAptCurr, pTopAptPerYr, dfCarrShare, 
      file = "data/airport.Rdata")
