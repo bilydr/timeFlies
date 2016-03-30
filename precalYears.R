@@ -25,6 +25,11 @@ aptChn <- tblAll %>%
     ) %>%
     ungroup()
 
+# set isNew to NA for beginning year of the period, same for toLea for ending year 
+rouChn[rouChn$Year == min(rouChn$Year),]$isNew <- NA
+rouChn[rouChn$Year == max(rouChn$Year),]$toLea <- NA
+
+
 # airports count per year
 aptNb <- aptChn %>%
     count(Year) %>%
@@ -44,6 +49,11 @@ alnChn <- tblAll %>%
         toLea = (row_number() == n() | lead(Year) != Year + 1)
     ) %>%
     ungroup()
+
+# set isNew to NA for beginning year of the period, same for toLea for ending year 
+alnChn[alnChn$Year == min(alnChn$Year),]$isNew <- NA
+alnChn[alnChn$Year == max(alnChn$Year),]$toLea <- NA
+
 
 # airlines count per year
 alnNb <- alnChn %>%
@@ -76,6 +86,10 @@ rouChn <- df %>%
         toLea = row_number() == n()
     ) %>%
     ungroup()
+
+# set isNew to NA for beginning year of the period, same for toLea for ending year 
+aptChn[aptChn$Year == min(aptChn$Year),]$isNew <- NA
+aptChn[aptChn$Year == max(aptChn$Year),]$toLea <- NA
 
 rm(df)
 

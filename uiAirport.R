@@ -1,16 +1,13 @@
 # ui elements of section: Airport Analytics
 load('data/airport.Rdata')
 
-# create a named vector for selectInput choices
-lstAirport <- topApt16$OriginAirportID
-names(lstAirport) <- topApt16$Airport
 
 uiAirport <- tabItem(
     tabName = "airport",
     fluidRow(
         box(
             title = "Top 10 Airports in 2016",
-            htmlOutput("gTopApt16"),
+            htmlOutput("gtopAptCurr"),
             solidHeader = T,
             status = "info",
             width = 6,
@@ -31,7 +28,7 @@ uiAirport <- tabItem(
             status = "success",
             selectizeInput("aptFocus",
                            label = "Airport",
-                           choices = lstAirport),
+                           choices = vTopApt),
             width = 6,
             height = 90
         ),
@@ -43,24 +40,25 @@ uiAirport <- tabItem(
         box(title = "Map",
             p('use leaflet to show 5 nearby airports'),
             width = 6,
-            height = 200
+            height = 400
         ),
         box(title = "Evolution",
-            p('use gvisLineChart to show #carriers, #routes, #flights along years'),
+            # p('use gvisLineChart to show #carriers, #routes, #flights along years'),
+            htmlOutput("gAptEvo"),
             width = 6,
-            height = 200
+            height = 400
         )
     ),
     fluidRow(
         box(title = "Route Destinations",
             p('use treemap to show destination shares'),
             width = 6,
-            height = 200
+            height = 400
         ),
         box(title = "Served Airlines",
             p('use ggplot2 facet to show airlines shares of flights'),
             width = 6,
-            height = 200
+            height = 400
             
         )
     )

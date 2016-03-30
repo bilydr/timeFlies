@@ -2,10 +2,10 @@ library(shiny)
 library(shinydashboard)
 library(googleVis)
 library(ggplot2)
-# library(scales)
 library(dplyr)
 library(tidyr)
 library(splitstackshape)
+# library(scales)
 
 # format percentage with 1 decimal
 pctFmt <- function(x) {
@@ -64,7 +64,7 @@ ui <- dashboardPage(
     dashboardBody(
         tags$head(
             # google analytics
-            includeScript("google-analytics.js"),
+            # includeScript("google-analytics.js"),
             # apply customized styles
             tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
         ),
@@ -83,7 +83,7 @@ ui <- dashboardPage(
 
 # app - SERVER ------------------------------------------------------------
 server <- function(input, output, session) {
-    ### Years Tab
+    ### Years in Review
     ## airport outputs
     aptStat <- reactive(aptNb[aptNb$Year == input$yr1,])
     output$aptBox1 <- renderInfoBox({
@@ -310,9 +310,10 @@ server <- function(input, output, session) {
             select(Route, n_LY = n)
     }, include.rownames = FALSE)
     
-    # top airports of 2016 in 1988, 2002, 2016 - column chart
-    output$gTopApt16 <- renderGvis({
-        pTopApt16
+    ### Airport Analytics 
+    # top airports of current year in 1988/1998/2008/current - column chart
+    output$gtopAptCurr <- renderGvis({
+        ptopAptCurr
     })
     
     # top airports motion chart
@@ -321,9 +322,13 @@ server <- function(input, output, session) {
 
     })
     
+    ## user choice among top airports to focus
+    aptFocusStat <- reactive(dfTopApt[dfTopApt$AirportID == input$aptFocus,])
+    aptFocusCurr <- reactive(aptFocusStat()[aptFocusStat()$Year == max(aptFocusStat()$Year),])
+    
     output$aptVBox1 <- renderValueBox({
         valueBox(
-            value = pctFmt(rouStat()$yoy),
+            value = aptFocusCurr()$nCarriers,
             subtitle = 'N. Carriers in 2016', 
             color = "olive"
         )
@@ -331,7 +336,7 @@ server <- function(input, output, session) {
     
     output$aptVBox2 <- renderValueBox({
         valueBox(
-            value = pctFmt(rouStat()$yoy),
+            value = aptFocusCurr()$nRoutes,
             subtitle = 'N. Routes in 2016', 
             color = "olive"
         )
@@ -339,9 +344,36 @@ server <- function(input, output, session) {
     
     output$aptVBox3 <- renderValueBox({
         valueBox(
-            value = pctFmt(rouStat()$yoy),
+            value = aptFocusCurr()$nFlights,
             subtitle = 'N. Flights in 2016', 
             color = "olive"
+        )
+    })
+    
+    output$gAptEvo <- renderGvis({
+        req(input$aptFocus)
+        df <- aptFocusStat() %>%
+            as.data.frame() 
+        apt <- names(vTopApt[vTopApt == input$aptFocus])
+        startYr <- min(aptFocusStat()$Year)
+        endYr <- max(aptFocusStat()$Year)
+        # browser()
+        gvisLineChart(
+            df,
+            xvar = "Year",
+            yvar = c("nCarriers", "nRoutes", "nFlights"),
+            options = list(
+                height = 350,
+                title = paste0(
+                    'Airport Capacity Evolution\n', 
+                    apt, ' (', startYr, ' ~ ', endYr, ')'
+                ),
+                legend = "{alignment:'center', position:'top'}",
+                series = "[{targetAxisIndex:0},{targetAxisIndex:0},
+                {targetAxisIndex:1}]",
+                vAxes = "[{title:'Nb. Carriers/Routes'}, {title:'Nb. Flights'}]"
+            )
+            
         )
     })
 }
