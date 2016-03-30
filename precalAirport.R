@@ -7,10 +7,10 @@ tblAll <- tbl(db, "allyears")
 load('data/lookup.Rdata')
 load('data/years.Rdata')
 
-# top 10 airports by flights in 2016 - column chart
+# top 100 airports by flights in 2016 - column chart
 topApt16 <- aptChn %>%
     filter(Year == max(Year)) %>%
-    top_n(10, n) %>% 
+    top_n(100, n) %>% 
     left_join(aptID, by = c('OriginAirportID' = 'Code')) %>% 
     rename(Airport = Description)
 # data frame for gvis bar chart

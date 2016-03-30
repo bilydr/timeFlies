@@ -7,7 +7,7 @@ library(dplyr)
 library(tidyr)
 library(splitstackshape)
 
-# format percentage
+# format percentage with 1 decimal
 pctFmt <- function(x) {
     sprintf("%+1.1f%%", x * 100)
 }
@@ -225,7 +225,6 @@ server <- function(input, output, session) {
         infoBox(
             title = paste("N. Routes in", input$yr1),
             value = rouStat()$n,
-            , 
             icon = icon("transfer", lib = "glyphicon"),
             color = "navy",
             fill = T
@@ -321,7 +320,30 @@ server <- function(input, output, session) {
         pTopAptPerYr
 
     })
-        
+    
+    output$aptVBox1 <- renderValueBox({
+        valueBox(
+            value = pctFmt(rouStat()$yoy),
+            subtitle = 'N. Carriers in 2016', 
+            color = "olive"
+        )
+    })
+    
+    output$aptVBox2 <- renderValueBox({
+        valueBox(
+            value = pctFmt(rouStat()$yoy),
+            subtitle = 'N. Routes in 2016', 
+            color = "olive"
+        )
+    })
+    
+    output$aptVBox3 <- renderValueBox({
+        valueBox(
+            value = pctFmt(rouStat()$yoy),
+            subtitle = 'N. Flights in 2016', 
+            color = "olive"
+        )
+    })
 }
 
 shinyApp(ui, server)
