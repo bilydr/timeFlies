@@ -66,7 +66,7 @@ ui <- dashboardPage(
     dashboardBody(
         tags$head(
             # google analytics - remove the row below if not needed
-            includeScript("google-analytics.js"), 
+            # includeScript("google-analytics.js"), 
             # apply customized styles
             tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
         ),
