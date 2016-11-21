@@ -6,7 +6,7 @@ library(data.table)
 
 fileurl <- 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat'
 
-aptGeo <- fread(fileurl) %>% 
+aptGeo <- fread(fileurl, data.table = F) %>% 
     select(Code = V5, lat = V7, lng = V8)
     
 
@@ -68,12 +68,12 @@ download.file(url = 'http://www.transtats.bts.gov/Download_Lookup.asp?Lookup=L_A
               quiet = T)
 
 
-uniCarr <- fread('downloads/L_UNIQUE_CARRIERS.csv')
-carrHist <- fread('downloads/L_CARRIER_HISTORY.csv')
-aptID <- fread('downloads/L_AIRPORT_ID.csv') 
+uniCarr <- fread('downloads/L_UNIQUE_CARRIERS.csv', data.table = F)
+carrHist <- fread('downloads/L_CARRIER_HISTORY.csv', data.table = F)
+aptID <- fread('downloads/L_AIRPORT_ID.csv', data.table = F) 
 # change airport ID to integer type
 aptID$Code <- as.integer(aptID$Code)
-apts <- fread('downloads/L_AIRPORT.csv') %>%
+apts <- fread('downloads/L_AIRPORT.csv', data.table = F) %>%
     left_join(aptGeo)
     
 save(uniCarr, carrHist, aptID, apts, file = "data/lookup.Rdata")

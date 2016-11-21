@@ -1,3 +1,4 @@
+# app TimeFlies
 library(shiny)
 library(shinydashboard)
 library(googleVis)
@@ -10,14 +11,15 @@ library(tidyr)
 library(splitstackshape)
 # library(scales)
 
+# set developer's debugging method
+options(shiny.error = browser) # browser or recover or NULL
+# set users' visibility on error message details
+options(shiny.sanitize.errors = FALSE)
+
 # format percentage with 1 decimal
 pctFmt <- function(x) {
     sprintf("%+1.1f%%", x * 100)
 }
-
-# connect to sqlite db
-db <- src_sqlite("data/timeFlies.sqlite")
-tblAll <- tbl(db, "allyears")
 
 # read in lookup tables 
 load('data/lookup.Rdata')
@@ -25,10 +27,18 @@ load('data/lookup.Rdata')
 load('data/years.Rdata')
 load('data/airport.Rdata')
 
+# import db interface functions
+source("dbInterface.R")
 
+# # get list of carriers as input choices
+# vCarrCurr <- analyzeYearCarrier(Yr = 2016) %>% 
+#     arrange(desc(n)) %>% 
+#     getElement("UniqueCarrier")
+# 
+# names(vCarrCurr) <- uniCarr$Description[match(vCarrCurr, uniCarr$Code)]
 
-# app - UI ----------------------------------------------------------------
-ui <- dashboardPage(
+# app - UI====
+ui <- dashboardPage(title = "TimeFlies",
     dashboardHeader(title = "TimeFlies", titleWidth = 160),
     dashboardSidebar(
         width = 160,
@@ -87,14 +97,16 @@ ui <- dashboardPage(
     )
 )
 
-# app - SERVER ------------------------------------------------------------
+# app - SERVER====
 server <- function(input, output, session) {
-    ### Years in Review==========
+    # Years in Review====
     source(file.path("server", "srvYears.R"),  local = TRUE)$value
    
-    ### Years in Review==========
+    # Airport Analytics====
     source(file.path("server", "srvAirport.R"),  local = TRUE)$value
-        
+
+    # Carrier Analytics====
+    source(file.path("server", "srvCarrier.R"),  local = TRUE)$value        
 }
 
 shinyApp(ui, server)

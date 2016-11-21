@@ -4,13 +4,13 @@ output$gvTopAptCurr <- renderGvis({
     ptopAptCurr
 })
 
-# top airports motion chart
+# top airports motion chart====
 output$gvTopAptMC <- renderGvis({
     pTopAptPerYr
     
 })
 
-## user choice among top airports to focus
+## user choice among top airports to focus====
 aptFocusStat <- reactive(dfTopApt[dfTopApt$AirportID == input$aptFocus,])
 aptFocusCurr <- reactive(aptFocusStat()[aptFocusStat()$Year == max(aptFocusStat()$Year),])
 
@@ -37,7 +37,8 @@ output$aptVBox3 <- renderValueBox({
         color = "olive"
     )
 })
-# airport capacity evolution line chart
+
+# airport capacity evolution line chart====
 output$gvAptEvo <- renderGvis({
     req(input$aptFocus)
     df <- aptFocusStat() %>%
@@ -64,7 +65,7 @@ output$gvAptEvo <- renderGvis({
     )
 })
 
-# route destination treemap
+# route destination treemap====
 output$gvRouDest <- renderGvis({
     req(input$aptFocus)
     apt <- names(vTopApt[vTopApt == input$aptFocus])
@@ -102,14 +103,14 @@ output$gvRouDest <- renderGvis({
     )
 })
 
-# airports nearby map
+# airports nearby map====
 output$gvAptNear <- renderGvis({
     req(input$aptFocus)
     
     
 })
 
-# Carriers' share - ggplot2 to plotly column chart 
+# Carriers' share - ggplot2 to plotly column chart ====
 output$plCarrShare <- renderPlotly({
     req(input$aptFocus)
     p <- dfCarrShare %>%
