@@ -1,7 +1,6 @@
 # ui elements of section: Airport Analytics
-load('data/airport.Rdata')
 
-uiAirport <- tabItem(
+tabItem(
     tabName = "airport",
     fluidRow(
         box(

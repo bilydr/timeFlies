@@ -1,5 +1,5 @@
 # ui elements of section: Years in Review
-uiYears <- tabItem(
+tabItem(
     tabName = "years",
     # row of year input
     fluidRow(box(
